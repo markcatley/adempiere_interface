@@ -1,11 +1,16 @@
 module AdempiereService
   class Field
     class_inheritable_accessor :attributes
-    self.attributes = [:adempiere_name, :name]
+    self.attributes = [:adempiere_name, :name, :read_only]
     attr_accessor *attributes
   
     def initialize name, field_name_or_options
-      options = if field_name_or_options.is_a? Hash
+      options = if field_name_or_options.is_a? Array
+        raise ArgumentError, "Too many options" unless field_name_or_options.size == 2
+        field_name_or_options.extract_options!.
+                              symbolize_keys!.
+                              merge({:adempiere_name => field_name_or_options.first})
+      elsif field_name_or_options.is_a? Hash
         field_name_or_options.symbolize_keys!
       else
         {:adempiere_name => field_name_or_options}
@@ -35,7 +40,19 @@ module AdempiereService
     end
     
     def escape attribute
-      attribute.to_s
+      if /^is/i === adempiere_name.to_s
+        if attribute
+          'Y'
+        else
+          'N'
+        end
+      else
+        attribute.to_s
+      end
+    end
+    
+    def read_only?
+      !! read_only
     end
   end
 end

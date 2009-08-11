@@ -9,7 +9,7 @@ module AdempiereService
                  :transation_date      => :DateTrx,
                  :tender_type          => :TenderType,
                  :amount               => :PayAmt,
-                 :document_status      => :DocStatus,
-                 :reconciled           => :IsReconciled
+                 :document_status      => [:DocStatus,    {:read_only => true}],
+                 :reconciled           => [:IsReconciled, {:read_only => true}]
   end
 end

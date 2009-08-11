@@ -1,11 +1,11 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper.rb'))
 
 describe AdempiereService::Field do
-  before :first do
-    @name = :business_partner_id
+  before :each do
+    @name           = :business_partner_id
     @adempiere_name = :C_BPartner_ID
-    @options_hash = {:adempiere_name => @adempiere_name}
-    @arguments = [@name, @adempiere_name]
+    @options_hash   = {:adempiere_name => @adempiere_name}
+    @arguments      = [@name, @adempiere_name]
   end
   
   it 'should assign name and adempiere name on new without options' do

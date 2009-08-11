@@ -1,0 +1,12 @@
+service_authentication:
+  username:     WebService
+  password:     WebService
+  role_id:      50004
+  client_id:    11
+  org_id:       11
+  warehouse_id: 103
+# other_roles:
+# - Some Role_ID
+#   Another Role_ID
+database_authentication:
+  database: adempiere_2

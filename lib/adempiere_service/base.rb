@@ -1,12 +1,10 @@
 module AdempiereService
   class Base
-    attr_reader :id
-    attr_accessor :attributes
-    attr_reader :last_request
-    attr_reader :last_response
+    attr_reader :id, :attributes, :last_request, :last_response, :errors
   
     def initialize(attributes = {})
-      self.attributes = {}
+      @attributes = {}
+      
       attributes.symbolize_keys!
       self.class.fields.each do |field_name, field|
         self.send "#{field_name}=", attributes[field_name]
@@ -17,9 +15,7 @@ module AdempiereService
       begin
         save!
       rescue AdempiereService::AdempiereServiceError => e
-        puts "--- ERROR ---"
-        puts e.inspect
-        puts "-------------"
+        @errors = e.inspect
         false
       end
     end
@@ -68,6 +64,10 @@ module AdempiereService
       def service
         Service
       end
+      
+      def create! *args
+        new(*args).save!
+      end
     end
     
     private
@@ -85,7 +85,7 @@ module AdempiereService
         @id = response[:record_id]
         @last_request  = response[:request]
         @last_response = response[:response]
-        true
+        self
       end
       
       def update!

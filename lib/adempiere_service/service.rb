@@ -1,3 +1,5 @@
+require 'handsoap'
+
 module AdempiereService
   class Service < Handsoap::Service
     endpoint :uri => 'http://adempiere.local:8080/ADInterface/services/ModelADService', :version => 1
@@ -26,7 +28,7 @@ module AdempiereService
       request, response = invoke('tns:createData', :soap_action => :none) do |message|
         message.add 'tns:ModelCRUDRequest' do |wrapper|
           wrapper.add 'tns:ModelCRUD' do |crud|
-            crud.add 'tns:serviceType', service_type(:create, options[:table_name])
+            crud.add 'tns:serviceType', self.class.service_type(:create, options[:table_name])
             crud.add 'tns:DataRow' do |data_row|
               options[:row_data].each do |field, data|
                 data_row.add 'tns:field' do |column|
@@ -87,6 +89,10 @@ module AdempiereService
         raise "TODO"
       end
     end
+    
+    def self.service_type type, table_name
+      "#{type}_#{table_name.to_s.split('_')[1..-1].join('_')}".classify
+    end
 
     private
       def dispatch(doc, action)
@@ -97,20 +103,26 @@ module AdempiereService
         { 'ns' => 'http://3e.pl/ADInterface' }
       end
       
-      def service_type type, table_name
-        "#{type}_#{table_name.to_s.split('_')[1..-1].join('_')}".classify
-      end
-      
       def authenticate message
+        parameters = {
+          :username     => 'WebService',
+          :password     => 'WebService',
+          :role_id      => 50004,
+          :client_id    => 11,
+          :org_id       => 11,
+          :warehouse_id => 103,
+          :language     => 'en_US',
+          :stage        => 9
+        }
         message.add 'tns:ADLoginRequest' do |auth|
-          auth.add 'tns:user',        'WebService'
-          auth.add 'tns:pass',        'WebService'
-          auth.add 'tns:RoleID',      50004
-          auth.add 'tns:ClientID',    11
-          auth.add 'tns:OrgID',       11
-          auth.add 'tns:WarehouseID', 103
-          auth.add 'tns:lang',        'en_US'
-          auth.add 'tns:stage',       9
+          auth.add 'tns:user',        AdempiereService.configuration.service.username
+          auth.add 'tns:pass',        AdempiereService.configuration.service.password
+          auth.add 'tns:RoleID',      AdempiereService.configuration.service.role_id
+          auth.add 'tns:ClientID',    AdempiereService.configuration.service.client_id
+          auth.add 'tns:OrgID',       AdempiereService.configuration.service.org_id
+          auth.add 'tns:WarehouseID', AdempiereService.configuration.service.warehouse_id
+          auth.add 'tns:lang',        AdempiereService.configuration.service.language
+          auth.add 'tns:stage',       AdempiereService.configuration.service.stage
         end
       end
       
