@@ -121,10 +121,10 @@ module AdempiereService
 
       def delete!
         unless new_record?
-          connection.exec "DELETE FROM #{table_name}
-                           WHERE #{primary_key_name} = #{primary_key} AND
-                           AD_Client_ID = #{standard_columns[:AD_Client_ID]} AND
-                           AD_Org_ID    = #{standard_columns[:AD_Org_ID]};"
+          connection.execute "DELETE FROM #{table_name}
+                              WHERE #{primary_key_name} = #{primary_key} AND
+                              AD_Client_ID = #{standard_columns[:AD_Client_ID]} AND
+                              AD_Org_ID    = #{standard_columns[:AD_Org_ID]};"
         end
         self.primary_key = nil
       end
@@ -156,7 +156,7 @@ module AdempiereService
 
       def exec_sql! params = :none
         sql = params == :none ? to_sql : to_sql(params)
-        result = connection.exec sql
+        result = connection.execute sql
         self.primary_key = result[0]['primary_key']
         raise "Primary key not found." if primary_key.blank?
         primary_key
@@ -166,17 +166,6 @@ module AdempiereService
         exec_sql! params if new_record?
         send(child_name).each do |child|
           child.exec_sql!({primary_key_name => primary_key}.merge(params || {}))
-        end
-      end
-
-      def transaction
-        exec 'BEGIN;'
-        begin
-          yield self
-          exec 'COMMIT;'
-        rescue
-          exec 'ROLLBACK;'
-          raise
         end
       end
     end
@@ -252,11 +241,11 @@ module AdempiereService
 
       def new_record?
         if super
-          result = connection.exec "SELECT #{primary_key_name} AS PRIMARY_KEY FROM #{table_name}
-                                    WHERE VALUE = '#{value}' AND
-                                    AD_Client_ID = #{standard_columns[:AD_Client_ID]} AND
-                                    AD_Org_ID    = #{standard_columns[:AD_Org_ID]}
-                                    LIMIT 1;"
+          result = connection.execute "SELECT #{primary_key_name} AS PRIMARY_KEY FROM #{table_name}
+                                       WHERE VALUE = '#{value}' AND
+                                       AD_Client_ID = #{standard_columns[:AD_Client_ID]} AND
+                                       AD_Org_ID    = #{standard_columns[:AD_Org_ID]}
+                                       LIMIT 1;"
           self.primary_key = result[0]['primary_key'] if result.ntuples > 0
         end
         super
@@ -270,7 +259,7 @@ module AdempiereService
         unless new_record?
           %w(ws_webservice_para ws_webservicefieldinput ws_webservicefieldoutput
               ws_webservicetypeaccess).each do |table_name|
-            connection.exec "DELETE FROM #{table_name}
+            connection.execute "DELETE FROM #{table_name}
                              WHERE #{primary_key_name} = #{primary_key} AND
                              AD_Client_ID = #{standard_columns[:AD_Client_ID]} AND
                              AD_Org_ID    = #{standard_columns[:AD_Org_ID]};"

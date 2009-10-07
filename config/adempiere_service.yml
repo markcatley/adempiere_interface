@@ -9,4 +9,4 @@ service_authentication:
 # - Some Role_ID
 #   Another Role_ID
 database_authentication:
-  database: adempiere_2
+  database: adempiere

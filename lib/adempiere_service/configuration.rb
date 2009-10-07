@@ -1,4 +1,6 @@
 require 'yaml'
+require 'active_record'
+require 'active_record/connection_adapters/postgresql_adapter'
 
 module AdempiereService
   def self.configuration
@@ -55,13 +57,14 @@ module AdempiereService
     end
     
     class Database
-      attr_accessor :host, :database, :username, :password
+      attr_accessor :host, :database, :port, :username, :password
       
       def initialize
         self.host     = 'localhost'
         self.database = 'adempiere'
         self.username = 'adempiere'
         self.password = 'adempiere'
+        self.port     = 5432
       end
       
       def << options
@@ -73,12 +76,8 @@ module AdempiereService
       end
       
       def connection
-        @connection ||= PGconn.new({
-          :host     => host,
-          :dbname   => database,
-          :user     => username,
-          :password => password
-        })
+        @connection ||= ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.
+          new(nil, Logger.new(STDOUT), [host, port, '', '', database, username, password], {})
       end
     end
   end
