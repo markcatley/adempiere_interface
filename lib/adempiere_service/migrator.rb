@@ -30,7 +30,12 @@ module AdempiereService
       end
       
       hash[:parameters] << {:name => 'DataRow'}  if options[:data_row]
-      hash[:parameters] << {:name => 'RecordID'} if options[:record_id]
+      
+      if options[:record_id]
+        hash[:parameters] << {:name => 'RecordID'}
+        hash[:parameters].last[:value] = options[:record_id] unless options[:record_id] == true
+      end
+      
       hash
     end
     
@@ -38,7 +43,8 @@ module AdempiereService
       options_hash :action         => :create,
                    :input_columns  => true,
                    :output_columns => true,
-                   :data_row       => true
+                   :data_row       => true,
+                   :record_id      => 0
     end
     
     def update_options_hash
