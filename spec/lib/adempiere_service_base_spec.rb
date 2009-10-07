@@ -98,19 +98,22 @@ describe AdempiereService::Base do
   def mock_service_with_create_response(klass)
     klass.service.instance.
       should_receive(:send_http_request).
-      and_return({
-        :status       => 200,
-        :body         => %q{
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-               xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-   <soap:Body>
-      <ns1:createDataResponse xmlns:ns1="http://3e.pl/ADInterface">
-         <StandardResponse RecordID="1000005" xmlns="http://3e.pl/ADInterface"/>
-      </ns1:createDataResponse>
-   </soap:Body>
-</soap:Envelope>
-        },
-        :content_type => "text/xml"})
+      and_return(
+        Handsoap::Http.parse_http_part(
+          {},
+          %q{
+            <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+                           xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+               <soap:Body>
+                  <ns1:createDataResponse xmlns:ns1="http://3e.pl/ADInterface">
+                     <StandardResponse RecordID="1000005" xmlns="http://3e.pl/ADInterface"/>
+                  </ns1:createDataResponse>
+               </soap:Body>
+            </soap:Envelope>
+          },
+          200,
+          'text/xml'
+        ))
   end
 end
