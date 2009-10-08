@@ -42,9 +42,7 @@ module AdempiereService
         end
       end
 
-      if has_errors?(response) || !has_record_id?(response)
-        raise_error(response)
-      end
+      raise_error(response)
       {:record_id => record_id(response), :request => request, :response => response}
     end
 
@@ -69,11 +67,24 @@ module AdempiereService
       end
     end
 
-    def set_doc_action!
-      soap_action = ''
-      response = invoke('tns:setDocAction', soap_action) do |message|
-        raise "TODO"
+    def set_doc_action!(options = {})
+      raise ArgumentError, "set_doc_action! requires a :record_id"  unless (options[:record_id].is_a?(Fixnum) && options[:record_id] > 0) || /^[1-9][0-9]*$/ === options[:record_id].to_s
+      raise ArgumentError, "set_doc_action! requires a :table_name" if options[:table_name].blank?
+      raise ArgumentError, "set_doc_action! requires a :doc_action" unless /^[A-Z]{2}$/ === options[:doc_action].to_s
+      
+      request, response = invoke('tns:setDocAction', :soap_action => :none) do |message|
+        message.add 'tns:ModelSetDocActionRequest' do |wrapper|
+          wrapper.add 'tns:ModelSetDocAction' do |doc_action|
+            doc_action.add 'tns:recordID', options[:record_id].to_s
+            doc_action.add 'tns:serviceType', self.class.service_type(:set_doc, options[:table_name])
+            doc_action.add 'tns:docAction', options[:doc_action].to_s
+          end
+          authenticate(wrapper)
+        end
       end
+      
+      raise_error(response)
+      {:record_id => record_id(response), :request => request, :response => response}
     end
 
     def delete_data!
@@ -127,8 +138,10 @@ module AdempiereService
       end
       
       def raise_error(response)
-        if has_errors? response
-          raise ErrorsReturned, errors(response)
+        if standard_response_has_errors?(response)
+          raise AdempiereServiceError, 'Error response received.'
+        elsif has_errors? response
+          raise ErrorsReturned, errors(response).inspect
         elsif !has_record_id? response
           raise RecordIDNotReturned, ["record id is #{record_id response}", response.inspect].join("\n")
         end
@@ -136,6 +149,10 @@ module AdempiereService
       
       def has_errors?(response)
         not errors(response).empty?
+      end
+      
+      def standard_response_has_errors?(response)
+        response.document.xpath(".//ns:StandardResponse[@IsError='true']", ns).length > 0
       end
       
       def errors(response)

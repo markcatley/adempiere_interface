@@ -72,16 +72,22 @@ module AdempiereService
 
     # def list_options_hash
     # end
-    # 
+
     # def process_options_hash
     # end
-    # 
-    # def set_doc_options_hash
-    # end
+
+    def set_doc_options_hash
+      hash = options_hash :record_id => true
+      hash[:type] = :set_doc
+      hash[:parameters].select { |p| p[:name] == 'TableName' }.each { |p| p[:name] = 'tableName' }
+      hash[:parameters].select { |p| p[:name] == 'RecordID'  }.each { |p| p[:name] = 'recordID'  }
+      hash[:parameters] << {:name => 'docAction'}
+      hash
+    end
     
     def migrate!
-      #:query, :list, :process, :set_doc
-      [:create, :update, :delete, :read].each do |action|
+      #:query, :list, :process
+      [:create, :update, :delete, :read, :set_doc].each do |action|
         webservice = MigratorHelpers::Webservice.new connection, send("#{action}_options_hash")
         webservice.migrate!
       end
