@@ -11,5 +11,7 @@ module AdempiereService
                  :amount               => :PayAmt,
                  :document_status      => [:DocStatus,    {:read_only => true}],
                  :reconciled           => [:IsReconciled, {:read_only => true}]
+
+    include DocProcessor
   end
 end
