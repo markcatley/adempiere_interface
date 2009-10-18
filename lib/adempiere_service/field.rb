@@ -46,6 +46,8 @@ module AdempiereService
         else
           'N'
         end
+      elsif /date/i === adempiere_name.to_s
+        attribute.strftime("%Y-%m-%d %H:%M:%S")
       else
         attribute.to_s
       end

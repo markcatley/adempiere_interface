@@ -1,4 +1,5 @@
 require 'handsoap'
+Handsoap.http_driver = :httpclient
 
 module AdempiereService
   class Service < Handsoap::Service
@@ -23,9 +24,7 @@ module AdempiereService
     end
 
     def create_data!(options = {})
-      options[:table_name]
-      options[:row_data]
-      request, response = invoke('tns:createData', :soap_action => :none) do |message|
+      response = invoke('tns:createData', :soap_action => :none) do |message|
         message.add 'tns:ModelCRUDRequest' do |wrapper|
           wrapper.add 'tns:ModelCRUD' do |crud|
             crud.add 'tns:serviceType', self.class.service_type(:create, options[:table_name])
@@ -43,7 +42,7 @@ module AdempiereService
       end
 
       raise_error(response)
-      {:record_id => record_id(response), :request => request, :response => response}
+      {:record_id => record_id(response), :request => nil, :response => response}
     end
 
     def update_data!
@@ -72,7 +71,7 @@ module AdempiereService
       raise ArgumentError, "set_doc_action! requires a :table_name" if options[:table_name].blank?
       raise ArgumentError, "set_doc_action! requires a :doc_action" unless /^[A-Z]{2}$/ === options[:doc_action].to_s
       
-      request, response = invoke('tns:setDocAction', :soap_action => :none) do |message|
+      response = invoke('tns:setDocAction', :soap_action => :none) do |message|
         message.add 'tns:ModelSetDocActionRequest' do |wrapper|
           wrapper.add 'tns:ModelSetDocAction' do |doc_action|
             doc_action.add 'tns:recordID', options[:record_id].to_s
@@ -84,7 +83,7 @@ module AdempiereService
       end
       
       raise_error(response)
-      {:record_id => record_id(response), :request => request, :response => response}
+      {:record_id => record_id(response), :request => nil, :response => response}
     end
 
     def delete_data!
@@ -139,7 +138,7 @@ module AdempiereService
       
       def raise_error(response)
         if standard_response_has_errors?(response)
-          raise AdempiereServiceError, 'Error response received.'
+          raise AdempiereServiceError, "Error response received.\n#{response.document.to_s}"
         elsif has_errors? response
           raise ErrorsReturned, errors(response).inspect
         elsif !has_record_id? response
